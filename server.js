@@ -1,3 +1,28 @@
+var http = require('http');
+var express = require('express');
+var socket_io = require('socket.io');
+
+var app = express();
+app.use(express.static('public'));
+
+var server = http.Server(app);
+var io = require('socket.io').listen(server);
+
+io.on("connection", function(socket){
+  socket.on("draw", function(position){
+    socket.broadcast.emit("draw", position);
+  });
+  socket.on("guess", function(guess){
+    socket.broadcast.emit("guess", guess);
+  })
+});
+
+
+
+server.listen(8080);
+
+
+/*
 //
 // # SimpleServer
 //
@@ -82,3 +107,4 @@ server.listen(process.env.PORT || 3000, process.env.IP || "0.0.0.0", function(){
   var addr = server.address();
   console.log("Chat server listening at", addr.address + ":" + addr.port);
 });
+*/
