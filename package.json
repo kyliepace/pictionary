@@ -1,0 +1,17 @@
+{
+  "name": "pictionary",
+  "version": "0.0.0",
+  "description": "practice using socket.io",
+  "main": "server.js",
+  "author": "Kylie Pace",
+  "dependencies": {
+    "async": "~0.2.8",
+    "express": "~3.2.4",
+    "socket.io": "~0.9.14"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "devDependencies": {},
+  "license": "ISC"
+}
