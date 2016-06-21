@@ -1,24 +1,26 @@
 var pictionary = function(serverSocket) {
-
     var socket = serverSocket;
     
-    ///////  ASSIGN ROLES ///////////
-    //limit what people can do based on roles
-    var role;
-    var assignRole = function(serverRole){
-       role = serverRole;
-       console.log(role);
-    };
-    socket.on("assignRoles", assignRole);
+    var role = "";
+    
+    var answer = prompt('Are you drawing or guessing?').toString();
+        if(answer.toLowerCase() === "drawing"){
+                role = "drawer";
+        }
+        else{
+                role = "guesser";
+        }
+        console.log(role);
+        socket.emit("little_newbie", role);
     
     /////GET SECRET WORD ////
     socket.emit("chooseWord"); //get the game started by choosing the secret word on the server
     var secretWord;//create variable
     var showWord = function(word){
-        if(role === "drawer"){
-            $("#word").text(word);//show the secret word to the drawer
-        }
         secretWord = word; //save value to secretWord variable so we can check it against the guesses
+        if(role === "drawer"){
+            $("#secretWord").text(word);//show the secret word to the drawer
+        }
     };
     socket.on("secretWord", showWord);
     
@@ -62,42 +64,57 @@ var pictionary = function(serverSocket) {
     
     //////// GUESSES //////
     var guessBox = $('#guess>input');
-    //when someone else makes a guess
-    var makeGuess = function(guess){
-        console.log(guess);
-        $("#madeGuess").text(guess);
-    };
-
+    var madeGuess = $("#madeGuess");
+    
     var onKeyDown = function(event) {
         if (event.keyCode != 13) { // Enter
             return;
         }
         else if (role === "guesser"){
             var guess = guessBox.val();
-            makeGuess(guess); //if the enter key was pressed, call makeGuess
-            console.log(guess);
-            socket.emit("guess", guess); //send event to server
             guessBox.val(''); //clear box
-            checkGuess(guess); //only check the guess made by the guesser
+            madeGuess.text(guess); //change guess text
+            console.log(guess); //console log to be sure it worked
+            socket.emit("guess", guess); //send event to server which then broadcasts to all other clients
+            if(guess === secretWord){
+                role = "drawer"; //this guesser gets to be the drawer now
+            }
         }
     };
     
-    //call onKeyDown when the enter key is hit
-    guessBox.on("keydown", function(event) {
+    guessBox.on("keydown", function(event) {  //call onKeyDown when the enter key is hit
         console.log("keydown");
         onKeyDown(event);
     });
+    
+
+   //when someone else makes a guess
+    var makeGuess = function(serverGuess){
+        console.log(serverGuess);
+        $("#madeGuess").text(serverGuess);
+        if (serverGuess === secretWord){
+            $("#madeGuess").text("They guessed correctly!");
+            socket.emit("gameOver");
+        }
+    };
+    
     //call makeGuess when other user emits guess event
     socket.on("guess", makeGuess);
     
-    //check the guess
-    var checkGuess = function(guess){
-        if(guess === secretWord){
-            $("#madeGuess").text("You guessed correctly!");
-            socket.emit("switchRoles");
-            role = "drawer";
+    
+    //////////// NEW GAME ///////////
+    var newGame = function(role){
+        if (role === "drawer"){
+            role = "guesser";
+            location.reload();
+        }
+        else {
+            location.reload();
         }
     };
+    
+    socket.on("newGame", newGame);
+    
 };
 
 
