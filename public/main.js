@@ -3,19 +3,31 @@ var pictionary = function(serverSocket) {
     
     var role = "";
     
-    var answer = prompt('Are you drawing or guessing?').toString();
-        if(answer.toLowerCase() === "drawing"){
+    var makeRole = function(existingArray){
+        if(existingArray.indexOf("drawing")=== -1){ //if no one has chosen to be the drawer yet
+            var answer = prompt('Are you drawing or guessing?').toString();
+            if(answer.toLowerCase() === "drawing" || answer.toLowerCase() === "draw" || answer.toLowerCase() === "drawer"){
                 role = "drawer";
+                $("#guess").css("display", "hidden");
+            }
+            else{
+                role = "guesser";
+            }
         }
         else{
-                role = "guesser";
+            role = "guesser";
+            alert("You are a "+role);
         }
-        console.log(role);
-        socket.emit("little_newbie", role);
+    console.log(role);
+    socket.emit("little_newbie", role); //send selected role to the server and cause secretWord to be emitted
+    };
     
+    socket.on("makeRole", makeRole);
+
     /////GET SECRET WORD ////
+    
     socket.emit("chooseWord"); //get the game started by choosing the secret word on the server
-    var secretWord;//create variable
+    var secretWord = ""; //create variable
     var showWord = function(word){
         secretWord = word; //save value to secretWord variable so we can check it against the guesses
         if(role === "drawer"){
@@ -73,11 +85,13 @@ var pictionary = function(serverSocket) {
         else if (role === "guesser"){
             var guess = guessBox.val();
             guessBox.val(''); //clear box
-            madeGuess.text(guess); //change guess text
+            madeGuess.text(guess); //change text shown in .html
             console.log(guess); //console log to be sure it worked
             socket.emit("guess", guess); //send event to server which then broadcasts to all other clients
             if(guess === secretWord){
-                role = "drawer"; //this guesser gets to be the drawer now
+                //role = "drawer"; //this guesser gets to be the drawer now
+                context.clearRect(0, 0, canvas[0].offsetWidth, canvas[0].offsetHeight);
+                madeGuess.text("You guessed correctly!");
             }
         }
     };
@@ -94,7 +108,8 @@ var pictionary = function(serverSocket) {
         $("#madeGuess").text(serverGuess);
         if (serverGuess === secretWord){
             $("#madeGuess").text("They guessed correctly!");
-            socket.emit("gameOver");
+            context.clearRect(0, 0, canvas[0].offsetWidth, canvas[0].offsetHeight);
+            //socket.emit("gameOver");
         }
     };
     
