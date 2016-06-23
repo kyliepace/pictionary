@@ -36,7 +36,9 @@ io.on("connection", function(socket){
     if (role === "drawer"){ //choose the secretWord if the user has chosen to be the drawer
       word = words[Math.floor(Math.random()* words.length)]; //choose random word from array
     }
-    socket.emit("secretWord", word);
+    socket.emit("secretWord", word); //show this later so both clients are in agreement
+  
+    socket.broadcast.emit("secretWord", word);    
   }); 
   
   
@@ -46,9 +48,18 @@ io.on("connection", function(socket){
   socket.on("guess", function(guess){
       socket.broadcast.emit("guess", guess);
   });
-  socket.on("gameOver", function(){
+  
+  socket.on("newGame", function(){
+    roles = [];
+    socket.emit("newGame");
+    socket.broadcast.emit("newGame");
+  });
+  
+  socket.on("disconnect", function(){
+    roles = [];
     socket.emit("newGame");
   });
+  
 });
 
 
